@@ -149,4 +149,49 @@ def update_inspection_status(id: int):
     except Exception as e:
         current_app.logger.error(f'Error fetching inspection: {str(e)}')
         return jsonify({'error': 'Internal server error'}), 500
+    
+
+@inspection_bp.route('/', methods=["GET"])
+@jwt_required()
+def get_all_inspections():
+    """Fetch all inspections with optional filtering by status"""
+    try:
+        current_user_id = int(get_jwt_identity())
+        status_filter = request.args.get('status')
+
+        query = Inspection.query.filter_by(
+            inspected_by=current_user_id
+        )
+
+        if status_filter:
+            if status_filter not in ['pending', 'reviewed', 'completed']:
+                return jsonify({'error': 'Invalid status filter. Must be pending, reviewed, or completed'}), 400
+            query = query.filter_by(status=status_filter)
+
+        inspections = query.order_by(Inspection.created_at.desc()).all()
+
+        inspections_data = []
+        for inspection in inspections:
+            inspections_data.append({
+                'id': inspection.id,
+                'vehicle_number': inspection.vehicle_number,
+                'damage_report': inspection.damage_report,
+                'status': inspection.status,
+                'image_url': inspection.image_url,
+                'created_at': inspection.created_at.isoformat()
+            })
+        
+        current_app.logger.info(f'Retrieved {len(inspections)} inspections for user {current_user_id}')
+        
+        return jsonify({
+            'inspections': inspections_data,
+            'count': len(inspections_data)
+        }), 200
+        
+    except SQLAlchemyError as e:
+        current_app.logger.error(f'Database error fetching inspection: {str(e)}')
+        return jsonify({'error': 'Database error occurred'}), 500
+    except Exception as e:
+        current_app.logger.error(f'Error fetching inspection: {str(e)}')
+        return jsonify({'error': 'Internal server error'}), 500
         
