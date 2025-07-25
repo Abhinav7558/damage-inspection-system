@@ -34,7 +34,7 @@ def authenticate_user(username, password):
     if not user or not verify_password(user.password_hash, password):
         return {"error": "Invalid username or password"}, 401
 
-    token = create_access_token(identity=user.id)
+    token = create_access_token(identity=str(user.id))
     return {
         "message": "Login successful",
         "access_token": token,

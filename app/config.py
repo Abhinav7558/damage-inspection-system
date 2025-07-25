@@ -11,7 +11,8 @@ class Config:
 
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=24)
-    JWT_ALGORITHM = 'HS256'
+    JWT_COOKIE_CSRF_PROTECT = False
+    JWT_ALGORITHM = os.environ.get('JWT_ALGORITHM')
 
 class DevelopmentConfig(Config):
     DEBUG = True

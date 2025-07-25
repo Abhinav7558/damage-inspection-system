@@ -27,6 +27,9 @@ def create_app(config_name="default"):
     from app.auth import auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
 
+    from app.inspection import inspection_bp
+    app.register_blueprint(inspection_bp, url_prefix='/inspection')
+
     # Add request logging middleware
     @app.before_request
     def log_request_info():
