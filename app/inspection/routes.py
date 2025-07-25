@@ -99,4 +99,54 @@ def fetch_inspection_details(id: int):
     except Exception as e:
         current_app.logger.error(f'Error fetching inspection: {str(e)}')
         return jsonify({'error': 'Internal server error'}), 500
+    
+
+@inspection_bp.route('/<int:id>', methods=["PATCH"])
+@jwt_required()
+def update_inspection_status(id: int):
+    """Update the status to reviewed or completed"""
+    try:
+        current_user_id = int(get_jwt_identity())
+        data = request.get_json()
+
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+            
+        new_status = data.get('status')
+        if not new_status:
+            return jsonify({'error': 'Status is required'}), 400
+        
+        if new_status not in ['reviewed', 'completed']:
+            return jsonify({'error': 'Invalid status. Must be pending, reviewed, or completed'}), 400
+
+        inspection = Inspection.query.filter_by(
+            id=id, 
+            inspected_by=current_user_id
+        ).first()
+
+        if not inspection:
+            return jsonify({'error': 'Inspection not found or unauthorized access'}), 404
+        
+        inspection.status = new_status
+        db.session.commit()
+            
+        current_app.logger.info(f'Inspection {id} status updated to {new_status} by user {current_user_id}')
+
+        return jsonify({
+            'inspection': {
+                'id': inspection.id,
+                'vehicle_number': inspection.vehicle_number,
+                'damage_report': inspection.damage_report,
+                'status': inspection.status,
+                'image_url': inspection.image_url,
+                'created_at': inspection.created_at.isoformat()
+            }
+        }), 200
+        
+    except SQLAlchemyError as e:
+        current_app.logger.error(f'Database error fetching inspection: {str(e)}')
+        return jsonify({'error': 'Database error occurred'}), 500
+    except Exception as e:
+        current_app.logger.error(f'Error fetching inspection: {str(e)}')
+        return jsonify({'error': 'Internal server error'}), 500
         
