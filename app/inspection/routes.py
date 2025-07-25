@@ -63,3 +63,40 @@ def create_new_inspection():
     except Exception as e:
         current_app.logger.error(f'Error creating inspection: {str(e)}')
         return jsonify({'error': 'Internal server error'}), 500
+    
+
+@inspection_bp.route('/<int:id>', methods=["GET"])
+@jwt_required()
+def fetch_inspection_details(id: int):
+    """Fetch inspection details (only if created by the logged-in user)"""
+    try:
+        current_user_id = int(get_jwt_identity())
+
+        inspection = Inspection.query.filter_by(
+            id=id, 
+            inspected_by=current_user_id
+        ).first()
+
+        if not inspection:
+            return jsonify({'error': 'Inspection not found or unauthorized access'}), 404
+            
+        current_app.logger.info(f'Inspection {id} retrieved by user {current_user_id}')
+
+        return jsonify({
+            'inspection': {
+                'id': inspection.id,
+                'vehicle_number': inspection.vehicle_number,
+                'damage_report': inspection.damage_report,
+                'status': inspection.status,
+                'image_url': inspection.image_url,
+                'created_at': inspection.created_at.isoformat()
+            }
+        }), 200
+        
+    except SQLAlchemyError as e:
+        current_app.logger.error(f'Database error fetching inspection: {str(e)}')
+        return jsonify({'error': 'Database error occurred'}), 500
+    except Exception as e:
+        current_app.logger.error(f'Error fetching inspection: {str(e)}')
+        return jsonify({'error': 'Internal server error'}), 500
+        
