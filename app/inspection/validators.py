@@ -1,3 +1,4 @@
+import re
 from urllib.parse import urlparse
 
 
@@ -18,3 +19,17 @@ def validate_image_url(image_url):
     
     except Exception:
         return False
+    
+
+def validate_vehicle_number(vehicle_number):
+    """Validate vehicle number format (basic validation)"""
+    
+    if len(vehicle_number) < 5 or len(vehicle_number) > 20:
+        return False, "Vehicle number must be between 5 and 20 characters"
+    
+    # Remove spaces and check if it contains only alphanumeric characters
+    cleaned = vehicle_number.replace(' ', '')
+    if not re.match(r'^[a-zA-Z0-9]+$', cleaned):
+        return False, "Vehicle number can only contain letters and numbers"
+    
+    return True, "Vehicle number is valid"

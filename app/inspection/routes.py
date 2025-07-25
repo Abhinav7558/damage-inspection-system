@@ -2,7 +2,7 @@ from flask import request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.exc import SQLAlchemyError
 from app import db
-from app.inspection.validators import validate_image_url
+from app.inspection.validators import validate_image_url, validate_vehicle_number
 from app.models.inspection import Inspection
 from . import inspection_bp
 
@@ -27,7 +27,11 @@ def create_new_inspection():
         if not image_url:
             return jsonify({'error': 'Image url is required'}), 400
         
-        if image_url and not validate_image_url(image_url):
+        is_valid, message = validate_vehicle_number(vehicle_number)
+        if not is_valid:
+            return jsonify({'error': message}), 400
+
+        if not validate_image_url(image_url):
             return jsonify({'error': 'Invalid image URL. Must end with .jpg, .jpeg, or .png'}), 400
         
         # Create new inspection
