@@ -118,3 +118,7 @@ App runs at: `http://127.0.0.1:5000`
   - DB failures
 
 ---
+
+## Live Demo
+
+https://damage-inspection-system.onrender.com
